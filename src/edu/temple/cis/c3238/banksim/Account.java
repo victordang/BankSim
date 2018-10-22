@@ -21,6 +21,7 @@ public class Account {
         return balance;
     }
 
+<<<<<<< HEAD
    
     public synchronized void waitForSufficientFunds(int amount){
         while (myBank.isOpen() && amount >= balance){
@@ -31,6 +32,16 @@ public class Account {
     }
    
     
+=======
+    public synchronized void waitForAvailableFunds(int amount){
+        while(myBank.isOpen() && amount >= balance){
+            try{
+                wait();
+            }catch(InterruptedException ex){}
+        }
+    }//end of waitForAvailableFunds
+
+>>>>>>> 36c0c6f7086d6626439742c244afd48ef92bfa44
     public synchronized boolean withdraw(int amount) {
         if (amount <= balance) {
             int currentBalance = balance;
