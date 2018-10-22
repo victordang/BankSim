@@ -1,5 +1,6 @@
 package edu.temple.cis.c3238.banksim;
 
+import java.util.concurrent.locks.ReentrantLock;
 /**
  * @author Cay Horstmann
  * @author Modified by Paul Wolfgang
@@ -15,8 +16,13 @@ public class Bank {
     private final int numAccounts;
     private boolean open;
     
+    public ReentrantLock aLock = new ReentrantLock();
+    
     
     public Bank(int numAccounts, int initialBalance) {
+        
+        open = true;
+        
         this.initialBalance = initialBalance;
         this.numAccounts = numAccounts;
         accounts = new Account[numAccounts];
@@ -27,20 +33,51 @@ public class Bank {
     }
 
     public void transfer(int from, int to, int amount) {
-//        accounts[from].waitForAvailableFunds(amount);
+        accounts[from].waitForSufficientFunds(amount);
+        if(!open){
+            return;
+        }
+        
+        aLock.lock();
+        try{
+            
+            if (accounts[from].withdraw(amount)){
+                accounts[to].deposit(amount);
+            }
+            
+        }
+        finally{
+         aLock.unlock();
+        }
+        if(shouldTest()) test();
+        
+        /*
         if (accounts[from].withdraw(amount)) {
             accounts[to].deposit(amount);
         }
         if (shouldTest()) test();
-    }
+        */
+}
 
     public void test() {
         int sum = 0;
+        
+        aLock.lock();
+        try{
+            
+            
         for (Account account : accounts) {
             System.out.printf("%s %s%n", 
                     Thread.currentThread().toString(), account.toString());
             sum += account.getBalance();
+        }//end of for
+        
         }
+        
+        finally{
+            aLock.unlock();
+        }
+        
         System.out.println(Thread.currentThread().toString() + 
                 " Sum: " + sum);
         if (sum != numAccounts * initialBalance) {
@@ -58,7 +95,7 @@ public class Bank {
     }
     
     
-    public boolean shouldTest() {
+    public synchronized boolean shouldTest() {
         return ++ntransacts % NTEST == 0;
     }
 
