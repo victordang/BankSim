@@ -21,7 +21,15 @@ public class Account {
         return balance;
     }
 
-    public boolean withdraw(int amount) {
+    public synchronized void waitForAvailableFunds(int amount){
+        while(myBank.isOpen() && amount >= balance){
+            try{
+                wait();
+            }catch(InterruptedException ex){}
+        }
+    }//end of waitForAvailableFunds
+
+    public synchronized boolean withdraw(int amount) {
         if (amount <= balance) {
             int currentBalance = balance;
 //            Thread.yield(); // Try to force collision
@@ -33,9 +41,9 @@ public class Account {
         }
     }
 
-    public void deposit(int amount) {
+    public synchronized void deposit(int amount) {
         int currentBalance = balance;
-//        Thread.yield();   // Try to force collision
+        Thread.yield();   // Try to force collision
         int newBalance = currentBalance + amount;
         balance = newBalance;
     }
