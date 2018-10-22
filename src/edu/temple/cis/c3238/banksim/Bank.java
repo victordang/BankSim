@@ -13,7 +13,9 @@ public class Bank {
     private long ntransacts = 0;
     private final int initialBalance;
     private final int numAccounts;
-
+    private boolean open;
+    
+    
     public Bank(int numAccounts, int initialBalance) {
         this.initialBalance = initialBalance;
         this.numAccounts = numAccounts;
@@ -60,4 +62,27 @@ public class Bank {
         return ++ntransacts % NTEST == 0;
     }
 
+    //is the bank account open
+    public synchronized boolean isOpen(){
+        return open;
+    }
+    
+    //closing the bank
+    public void closeBank(){
+        synchronized(this){
+            open = false;
+        }
+        for (Account account : accounts){
+            synchronized(account){
+                account.notifyAll();
+            }
+            
+        }//end of for
+    }
+    
+    
+    
+    
+    
+    
 }
